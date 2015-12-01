@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div align="center">
+  <h1>Game Editting Page</h1></br>
+    <form action="#" method="POST">
+    <input type="text" size="30" name="new_name" value="{{game_info.name}}" placeholder="{{game_info.name}}"></br>
+    <input type="text" size="30" name="new_description" value="{{game_info.description}}" placeholder="{{game_info.description}}"></br>
+    <input type="text" size="30" name="new_developed" value="{{game_info.developed_by}}" placeholder="{{game_info.developed_by}}"></br>
+    <input type="text" size="30" name="new_published" value="{{game_info.published_by}}" placeholder="{{game_info.published_by}}"></br>
+    <input type="text" size="2" maxlength="2" name="new_release_month" value="{{game_info.release_date.month}}" placeholder="{{game_info.release_date.month}}">/
+    <input type="text" size="2" maxlength="2" name="new_release_day" value="{{game_info.release_date.day}}" placeholder="{{game_info.release_date.day}}">/
+    <input type="text" size="4" maxlength="4" name="new_release_year" value="{{game_info.release_date.year}}" placeholder="{{game_info.release_date.year}}"></br>
+    <select name="genres">
+      {% for item in genre_info %}
+      {% if game_info.genre.name == item.name %}
+      <option selected>{{item.name}}</option>
+      {% else %}
+      <option>{{item.name}}</option>
+      {% endif %}
+      {% endfor %}
+      <option>New Genre</option>
+    </select>
+    <input type="text" size="30" name="new_genre" placeholder="New Genre Name"></br>
+    <input type="submit" value="Edit Game"></br>
+  </form>
+
+  <a href="{{url_for('show_game', genre_id=genre_id, game_id=game_id)}}">Cancel</a></br>
+</div>
+
+{% endblock content %}

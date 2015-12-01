@@ -1,0 +1,9 @@
+{% extends "two_pane_content_base.html" %}
+{% block right_pane_content %}
+<div>
+  {% for item in game_info %}
+  <p><a href="{{url_for('show_game', genre_id=item.genre_id, game_id=item.id)}}">{{item.name}}</a></p>
+  {% endfor %}
+</div>
+
+{% endblock right_pane_content %}

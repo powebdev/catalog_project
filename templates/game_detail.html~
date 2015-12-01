@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div align="center">
+<table style="width:100%">
+  <tr>
+    <td colspan="2">
+      <p>{{game_info.name}}
+	<a href="{{url_for('show_game_list', genre_id=game_info.genre_id)}}">Back</a>
+	<span>|</span>
+	<a href="{{url_for('edit_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Edit</a>
+	<span>|</span>
+	<a href="{{url_for('delete_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Delete</a>
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img title="Game Art" alt="{{game_info.name}}" src="http://placehold.it/200x300">
+    </td>
+    <td>
+      <p>Developer</br>
+	{{game_info.developed_by}}
+      </p>
+      <p>Publisher</br>
+	{{game_info.published_by}}
+      </p>
+      <p>Release Date</br>
+	{{game_info.release_date}}
+      </p>
+      <p>Genre</br>
+	{{game_info.genre.name}}
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <p>{{game_info.description}}</p>
+    </td>
+  </tr>
+
+</table>
+
+
+</div>
+
+{% endblock content %}

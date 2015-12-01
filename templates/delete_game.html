@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div align="center">
+  <h1>Are you sure you want to delete {{game_info.name}}?</h1></br>
+  <form action="{{url_for('delete_game', genre_id=genre_id, game_id=game_id)}}" method="POST" enctype="multipart/form-data">
+    <input type="submit" value="Confirm Delete">
+  </form>
+  <a href="{{url_for('show_game', genre_id=genre_id, game_id=game_id)}}">Cancel</a></br>
+</div>
+
+{% endblock content %}

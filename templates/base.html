@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Catalog</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+  </head>
+  <body>
+    
+    <div class="banner">
+      <a href='/catalog/'>home</a>
+      <span id="login_button">
+	{% if 'username' not in session %}
+	<a href='/login'>
+	  Login
+	</a>
+	{% else %}
+	<a href='/gdisconnect'>
+	  Logout
+	</a>
+	{% endif %}
+      </span>
+    </div>
+
+    <div class="container">
+      {% block content %}
+      {% endblock content %}
+    </div>
+  </body>
+</html>
