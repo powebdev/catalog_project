@@ -1,5 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>You cannot edit/delete other people's stuff</h1>
-<a href="{{url_for('show_home')}}">Home</a>>
+<div class="container">
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="panel panel-info">
+	<div class="panel-heading">
+	  <h3 class="panel-title">
+	    Unauthorized Operation
+	  </h3>
+	</div><!-- /panel-heading -->
+	<div class="panel-body">
+	  <div class="row">
+	    <h1>You cannot edit/delete other people's stuff</h1>
+	    <a href="{{url_for('show_home')}}">Home</a>
+	  </div><!-- /row -->
+	</div><!-- /panel-body -->
+      </div><!-- /panel -->
+    </div><!-- /col-md-8 -->
+    <div class="col-md-2"></div>
+  </div>
+</div><!-- /container -->
 {% endblock content %}

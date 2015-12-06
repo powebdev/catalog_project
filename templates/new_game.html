@@ -1,36 +1,23 @@
-{% extends "base.html" %}
-{% block content %}
-<div align="center">
-  <h1>Adding a New Game</h1></br>
-  <form method="POST" enctype="multipart/form-data" action="/catalog/new/">
-    Game Title: 
-    <input type="text" size="30" name="game_name"></br>
-    Developed By:     
-    <input type="text" size="30" name="game_developed"></br>
-    Published By: 
-    <input type="text" size="30" name="game_published"></br>
-    Release date: </br>
-    <input type="text" size="1" maxlength="2" name="game_release_month" placeholder="MM">
-    /
-    <input type="text" size="1" maxlength="2" name="game_release_day" placeholder="DD">
-    /
-    <input type="text" size="2" maxlength="4" name="game_release_year" placeholder="YYYY">
-    
-    <div align = "center">
-      Game Genre:
-      <select name="genres">
-	{% for item in genre_info %}
-	<option>{{item.name}}</option>
-	{% endfor %}
-	<option>New Genre</option>
-      </select>
-      <input type="text" size="30" name="new_genre" placeholder="New Genre Name"></br>
-    </div>
-    Game Description: 
-    <input type="text" size="30" name="game_description"></br>
-    <input type="submit" value="Add New Game"></br>
-  </form>
-  <a href="/catalog/">Cancel</a>
-</div>
+{% extends "form_template.html" %}
 
-{% endblock content %}
+{% block panel_title %}
+Adding New Game
+{% endblock panel_title %}
+
+{% block form_action %}
+<form method="POST" enctype="multipart/form-data" action="{{url_for('add_new_game')}}">
+{% endblock form_action %}
+
+{% block button_info %}
+<div class="form-group row">
+  <div class="col-sm-offset-6 col-sm-2">
+    <button type="submit" class="btn btn-primary">
+      Add
+    </button>
+  </div>
+  <div class="col-sm-2">
+    <a href="{{url_for('show_home')}}"
+       class="btn btn-primary" role="button" href="/catalog/">Cancel</a>
+  </div>
+</div>
+{% endblock button_info %}

@@ -1,46 +1,85 @@
 {% extends "base.html" %}
 {% block content %}
-<div align="center">
-<table style="width:100%">
-  <tr>
-    <td colspan="2">
-      <p>{{game_info.name}}
-	<a href="{{url_for('show_game_list', genre_id=game_info.genre_id)}}">Back</a>
-	<span>|</span>
-	<a href="{{url_for('edit_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Edit</a>
-	<span>|</span>
-	<a href="{{url_for('delete_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Delete</a>
-      </p>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <img title="Game Art" alt="{{game_info.name}}" src="http://placehold.it/200x300">
-    </td>
-    <td>
-      <p>Developer</br>
-	{{game_info.developed_by}}
-      </p>
-      <p>Publisher</br>
-	{{game_info.published_by}}
-      </p>
-      <p>Release Date</br>
-	{{game_info.release_date}}
-      </p>
-      <p>Genre</br>
-	{{game_info.genre.name}}
-      </p>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2">
-      <p>{{game_info.description}}</p>
-    </td>
-  </tr>
+<div class="container">
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="panel panel-info">
+	<div class="panel-heading">
+	  <h3 class="panel-title">
+	    <a href="{{url_for('show_game_list', genre_id=game_info.genre_id)}}">Back</a>
+	    <span>|</span>
+	    <a title="Get information of this game in JSON format" href="{{url_for('one_game_in_genre_JSON', genre_id=game_info.genre_id, game_id=game_info.id)}}">JSON</a>
+	    {% if is_user %}
+	    <span>|</span>
+	    <a href="{{url_for('edit_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Edit</a>
+	    <span>|</span>
+	    <a href="{{url_for('delete_game', genre_id=game_info.genre_id, game_id=game_info.id)}}">Delete</a>
+	    {% endif %}
+	  </h3>
+	</div><!-- /panel-heading -->
 
-</table>
+	<div class="panel-body">
+	  <div class="row">
+	    <div class="col-md-4">
+	      <img src="{{game_info.image_url}}" alt="{{game_info.name}} Game Art" height="300" width="200">
+	    </div><!-- /img column -->
 
+	    <div class="col-md-8">
+	      <div class="row">
+		<div class="col-md-offset-1 col-md-3">
+		  Title:
+		</div>
+		<div class="col-md-8">
+		  {{game_info.name}}
+		</div>
+	      </div><!-- /game name row -->
 
-</div>
+	      <div class="row">
+		<div class="col-md-offset-1 col-md-3">
+		  Genre:
+		</div>
+		<div class="col-md-8">
+		  {{game_info.genre.name}}
+		</div>
+	      </div><!-- /genre row -->
 
+	      <div class="row">
+		<div class="col-md-offset-1 col-md-3">
+		  Developer:
+		</div>
+		<div class="col-md-8">
+		  {{game_info.developed_by}}
+		</div>
+	      </div><!-- /developer row -->
+
+	      <div class="row">
+		<div class="col-md-offset-1 col-md-3">
+		  Publisher:
+		</div>
+		<div class="col-md-8">
+		  {{game_info.published_by}}
+		</div>
+	      </div><!-- /publisher row -->
+
+	      <div class="row">
+		<div class="col-md-offset-1 col-md-3">
+		  Release In:
+		</div>
+		<div class="col-md-8">
+		  {{game_info.release_year}}
+		</div>
+	      </div><!-- /release year row -->
+	    </div><!-- /game info column -->
+	  </div><!-- /game art and info row -->
+
+	  <div class="well">
+	    {{game_info.description}}
+	  </div><!-- /game description well -->
+	</div><!-- /panel-body -->
+      </div><!-- /panel -->
+    </div><!-- /col-md-8 -->
+    <div class="col-md-2"></div>
+  </div>
+</div><!-- /container -->
 {% endblock content %}

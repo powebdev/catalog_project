@@ -1,9 +1,39 @@
-{% extends "two_pane_content_base.html" %}
-{% block right_pane_content %}
-<div>
-  {% for item in game_info %}
-  <p><a href="{{url_for('show_game', genre_id=item.genre_id, game_id=item.id)}}">{{item.name}}</a></p>
-  {% endfor %}
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="row">
+	<div class="col-md-4">
+	  <ul class="list-group">
+	    <li class="list-group-item active">Game Genres
+	      <span>|</span>
+	      <a class="json-link" title="Get all the genres in JSON format" href="{{url_for('all_genres_JSON')}}">JSON</a>
+	    </li>
+	    {% for item in genre_info %}
+	    <li class="list-group-item">
+	      <a href="{{url_for('show_game_list', genre_id=item.id)}}">{{item.name}}</a>
+	    </li>
+	    {% endfor %}
+	  </ul>
+	</div>
+	<div class="col-md-8">
+	  <ul class="list-group">
+	    <li class="list-group-item active">{{game_genre.name}}
+	      <span>|</span>
+	      <a class="json-link" title="Get all the games in this genre in JSON format" href="{{url_for('games_from_one_genre_JSON', genre_id=game_genre.id)}}">JSON</a>
+	    </li>
+	    {% for item in game_info %}
+	    <li class="list-group-item">
+	      <a href="{{url_for('show_game', genre_id=item.genre_id, game_id=item.id)}}">{{item.name}}</a>
+	    </li>
+	    {% endfor %}
+	  </ul>
+	</div>
+      </div>
+    </div>
+    <div class="col-md-2"></div>
+  </div>
 </div>
-
-{% endblock right_pane_content %}
+{% endblock content %}

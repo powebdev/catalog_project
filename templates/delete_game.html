@@ -1,11 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
-<div align="center">
-  <h1>Are you sure you want to delete {{game_info.name}}?</h1></br>
-  <form action="{{url_for('delete_game', genre_id=genre_id, game_id=game_id)}}" method="POST" enctype="multipart/form-data">
-    <input type="submit" value="Confirm Delete">
-  </form>
-  <a href="{{url_for('show_game', genre_id=genre_id, game_id=game_id)}}">Cancel</a></br>
+<div class="container">
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="panel panel-info">
+	<div class="panel-heading">
+	  <h3 class="panel-title">Confirm Deleting Operation
+	  </h3>
+	</div>
+	<div class="panel-body">
+	  <div class="row">
+	    <div class="col-md-12">
+	      Are you sure you want to delete {{game_info.name}}?
+	    </div>
+	  </div>
+	  <form action="{{url_for('delete_game', genre_id=genre_id, game_id=game_id)}}" method="POST" enctype="multipart/form-data">
+	    <input name="csrf_token" type="hidden" value="{{CSRF_TOKEN}}">
+	    <div clas="form-group row">
+	      <div class="col-sm-offset-6 col-sm-2">
+		<button type="submit" class="btn btn-primary">
+		  Confirm
+		</button>
+	      </div>
+	      <div class="col-sm-2">
+		<a class="btn btn-primary"
+		   href="{{url_for('show_game', genre_id=genre_id, game_id=game_id)}}">
+		  Cancel
+		</a>
+	      </div>
+	    </div>
+	  </form>
+	</div>
+      </div>
+    </div>
+    <div class="col-md-2"></div>
+  </div>
 </div>
-
 {% endblock content %}

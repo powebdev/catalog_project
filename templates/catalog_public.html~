@@ -1,4 +1,0 @@
-
-{% extends "two_pane_content_base.html" %}
-{% block right_pane_content %}
-{% endblock right_pane_content %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+      <div class="panel panel-info">
+	<div class="panel-heading">
+	  <h3 class="panel-title">
+	    {% block panel_title %}
+	    {% endblock panel_title %}
+	  </h3>
+	</div><!-- /panel-heading -->
+
+	<div class="panel-body">
+	  {% block form_action %}
+	  {% endblock form_action %}
+
+	  <!-- game name field -->
+	  <div class="form-group row">
+	    <label for="inputName" class="col-sm-offset-2 col-sm-2 form-control-label">Name:</label>
+	    <div class="col-sm-6">
+	      <input type="text" 
+		     class="form-control" 
+		     id="inputName"
+		     {% if game_info %}
+		     value="{{game_info.name}}"
+		     placeholder="{{game_info.name}}"
+		     {% else %}
+		     placeholder="Name"
+		     {% endif %}
+		     name="game_name">
+	    </div>
+	  </div>
+	  <!-- /game name field -->
+
+	  <!-- game genre field -->
+	  <div class="form-group row">
+	    <label for="inputGenre" class="col-sm-offset-2 col-sm-2 form-control-label">Genre:</label>
+	    
+	    <div class="col-sm-3">
+	      <select class="form-control" id="selectGenre" name="genres">
+		{% for item in genre_info %}
+		{% if game_info %}
+		{% if game_info.genre.name == item.name %}
+		<option selected>{{item.name}}</option>
+		{% else %}
+		<option>{{item.name}}</option>
+		{% endif %}
+		{% else %}
+		<option>{{item.name}}</option>
+		{% endif %}
+		{% endfor %}
+		<option>New Genre</option>
+	      </select>
+	    </div>
+	    
+	    <div class="col-sm-3">
+	      <input type="text"
+		     class="form-control"
+		     id=""
+		     name="new_genre"
+		     placeholder="New Genre">
+	    </div>
+	  </div>
+	  <!-- /game genre field -->
+
+	  <!-- game developer field -->
+	  <div class="form-group row">
+	    <label for="inputDeveloper" class="col-sm-offset-2 col-sm-2 form-control-label">Developer:</label>
+	    <div class="col-sm-6">
+	      <input type="text"
+		     class="form-control"
+		     id="inputDeveloper"
+		     {% if game_info %}
+		     value="{{game_info.developed_by}}"
+		     placeholder="{{game_info.developed_by}}"
+		     {% else %}
+		     placeholder="Developer"
+		     {% endif %}
+		     name="game_developed">
+	    </div>
+	  </div>
+	  <!-- /game developer field -->
+
+	  <!-- game publisher field -->
+	  <div class="form-group row">
+	    <label for="inputPublisher" class="col-sm-offset-2 col-sm-2 form-control-label">Publisher:</label>
+	    <div class="col-sm-6">
+	      <input type="text"
+		     class="form-control"
+		     id="inputPublisher"
+		     {% if game_info %}
+		     value="{{game_info.published_by}}"
+		     placeholder="{{game_info.published_by}}"
+		     {% else %}
+		     placeholder="Publisher"
+		     {% endif %}
+		     name="game_published">
+
+	    </div>
+	  </div>
+	  <!-- /game publisher field -->
+	  
+	  <!-- game release year field-->
+	  <div class="form-group row">
+	    <label for="inputYear" class="col-sm-offset-2 col-sm-2 form-control-label">Release Year:</label>
+	    <div class="col-sm-6">
+	      <input type="text"
+		     class="form-control"
+		     id="inputYear"
+		     {% if game_info %}
+		     value="{{game_info.release_year}}"
+		     placeholder="{{game_info.release_year}}"
+		     {% else %}
+		     placeholder="Release Year"
+		     {% endif %}
+		     name="game_release_year">
+
+	    </div>
+	  </div>
+	  <!-- /game release year field -->
+
+	  <!-- img url field -->
+	  <div class="form-group row">
+	    <label for="inputImageUrl"
+		   class="col-sm-offset-2 col-sm-2 form-control-label">
+	      Image URL:
+	    </label>
+	    <div class="col-sm-6">
+	      <input type="text"
+		     class="form-control"
+		     id="inputImageUrl"
+		     {% if game_info %}
+		     value="{{game_info.image_url}}"
+		     placeholder="{{game_info.image_url}}"
+		     {% else %}
+		     placeholder="URL:"
+		     {% endif %}
+		     name="game_image_url">
+	    </div>
+	  </div>
+	  <!-- /img url field -->
+
+	  <!-- game description field -->
+	  <div class="form-group row">
+	    <label for="inputDescription"
+		   class="col-sm-offset-2 col-sm-2 form-control-label">
+	      Description:
+	    </label>
+	    <div class="col-sm-6">
+	      <input type="text"
+		     class="form-control"
+		     id="inputDescription"
+		     {% if game_info %}
+		     value="{{game_info.description}}"
+		     placeholder="{{game_info.description}}"
+		     {% else %}
+		     placeholder="Description"
+		     {% endif %}
+		     name="game_description">
+	    </div>
+	  </div>
+	  <!-- /game description field -->
+	  
+	  {% block button_info %}	  
+	  {% endblock button_info %}
+</form>
+</div><!-- /panel-body -->
+</div><!-- /panel -->
+</div><!-- /col-md-8 -->
+<div class="col-md-2"></div>
+</div><!-- /row -->
+</div><!-- /container -->
+
+{% endblock content %}

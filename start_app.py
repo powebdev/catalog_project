@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, url_for
-from flask import redirect, jsonify, make_response
+from flask import redirect, jsonify, make_response, flash
 from flask import session as login_session
 app = Flask(__name__)
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker, joinedload
 from database_setup import Base, Genre, Game, User
-from datetime import date, datetime
+from datetime import datetime
+from werkzeug.contrib.atom import AtomFeed
 
 import random
 import string
@@ -29,14 +30,17 @@ session = DBSession()
 
 @app.route('/login')
 def show_login():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
+    """Returns the login page."""
+    state = make_csrf_token()
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """Performs login operation using 3rd party authentication service.
+    As shown in the oauth course
+    """
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -124,6 +128,9 @@ def gconnect():
 # DISCONNECT - Revoke a current user's token and reset their login_session.
 @app.route('/gdisconnect')
 def gdisconnect():
+    """Performs logout operation from 3rd party authentication service
+        As shown in the oauth course
+    """
     # Only disconnect a connected user.
     credentials = OAuth2Credentials.from_json(login_session.get('credentials'))
 
@@ -163,34 +170,29 @@ def gdisconnect():
 @app.route('/')
 @app.route('/catalog/')
 def show_home():
-    if 'username' not in login_session:
-        return render_template('catalog_public.html',
-                               genre_info=get_all_genres())
-    else:
-        return render_template('catalog.html', genre_info=get_all_genres())
+    """Displays the frontpage with a list of newly added games.
+    """
+    all_genres = get_all_genres()
+    newly_added_games = get_new_games()
+    return render_template('catalog.html',
+                           genre_info=all_genres,
+                           new_items=newly_added_games)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def add_new_game():
+    """Displays the  page and handle the POST request for create operation.
+    """
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
         game_title = request.form['game_name']
         game_developed_by = request.form['game_developed']
         game_published_by = request.form['game_published']
-        release_year = request.form['game_release_year']
-        release_month = request.form['game_release_month']
-        release_day = request.form['game_release_day']
-
-        if (release_day != "" and release_month != "" and release_year != ""):
-            game_release = date(int(release_year),
-                                int(release_month),
-                                int(release_day))
-        else:
-            game_release = date(1947, 1, 25)
-
+        game_release_year = request.form['game_release_year']
         game_description = request.form['game_description']
         game_genre = request.form['genres']
+        game_image = request.form['game_image_url']
         time_now = datetime.now()
         added_by_user_id = login_session['user_id']
 
@@ -198,18 +200,24 @@ def add_new_game():
             selected_genre_id = create_genre(request.form['new_genre'])
         else:
             selected_genre_id = get_genre_id(game_genre)
-        
+
         game_info = create_game_info_dict(game_name=game_title,
                                           developer=game_developed_by,
                                           publisher=game_published_by,
+                                          image_url=game_image,
                                           genre_id=selected_genre_id,
                                           user_id=added_by_user_id,
                                           description=game_description,
-                                          release_date=game_release,
+                                          release_year=game_release_year,
                                           time_now=time_now)
 
         new_game_id = create_game(game_info)
-        
+        if new_game_id is None:
+            flash("Something went wrong when tried to add game to database",
+                  "error")
+        else:
+            flash(get_game_info(new_game_id).name+" was added to the database")
+
         return redirect(url_for('show_home'))
 
     genre_list = get_all_genres()
@@ -219,66 +227,82 @@ def add_new_game():
 @app.route('/catalog/<int:genre_id>/')
 @app.route('/catalog/<int:genre_id>/games/')
 def show_game_list(genre_id):
+    """Displays all games in selected genre.
+    Args:
+      genre_id: the id of the game's genre.
+    """
     genre_list = get_all_genres()
     all_games = get_all_games_in_genre(genre_id)
+    seleced_genre = get_genre_info(genre_id)
     return render_template('game_list.html',
                            genre_info=genre_list,
-                           game_info=all_games)
+                           game_info=all_games,
+                           game_genre=seleced_genre)
 
 
 @app.route('/catalog/<int:genre_id>/games/<int:game_id>/')
 def show_game(genre_id, game_id):
+    """Displays information for requested game.
+    Args:
+      genre_id: the id of the game's genre.
+      game_id: the id of the game to search for in DB.
+    """
     game_result = get_game_info(game_id)
+    ownership = False
+
     if 'username' in login_session:
         user_id = get_user_id(login_session['email'])
         if user_id == game_result.user_id:
-            return render_template('game_detail.html', game_info=game_result)
-    else:
-        return render_template('game_detail_public.html',
-                               game_info=game_result)
+            ownership = True
+
+    return render_template('game_detail.html',
+                           game_info=game_result,
+                           is_user=ownership)
 
 
 @app.route('/catalog/<int:genre_id>/games/<int:game_id>/edit/',
            methods=['GET', 'POST'])
 def edit_game(genre_id, game_id):
+    """Displays the  page and handle the POST request for update operation.
+    Args:
+      genre_id: the id of the game's genre.
+      game_id: the id of the game to search for in DB.
+    """
     if 'username' not in login_session:
         return redirect('/login')
     game_result = get_game_info(game_id)
     current_user_id = get_user_id(login_session['email'])
     if request.method == 'POST':
-        
-        new_name = request.form['new_name']
-        new_description = request.form['new_description']
-        new_developed_by = request.form['new_developed']
-        new_published_by = request.form['new_published']
-        new_month = request.form['new_release_month']
-        new_day = request.form['new_release_day']
-        new_year = request.form['new_release_year']
+
+        new_name = request.form['game_name']
+        new_description = request.form['game_description']
+        new_developed_by = request.form['game_developed']
+        new_published_by = request.form['game_published']
+        new_year = request.form['game_release_year']
+        new_image_url = request.form['game_image_url']
         game_genre = request.form['genres']
         if new_name != "":
             game_result.name = new_name
-        
+
         game_result.description = new_description
         game_result.developed_by = new_developed_by
         game_result.published_by = new_published_by
-        
-        if (new_month != "" and new_day != "" and new_year != ""):
-            game_result.release_date = date(int(new_year),
-                                            int(new_month),
-                                            int(new_day))
+        game_result.release_year = new_year
+        game_result.image_url = new_image_url
 
         if game_genre == "New Genre":
             selected_genre_id = create_genre(request.form['new_genre'])
         else:
             selected_genre_id = get_genre_id(game_genre)
-        
+
         if selected_genre_id is not None:
                 game_result.genre_id = selected_genre_id
         update_row(game_result)
         new_game_result = get_all_games_in_genre(genre_id)
         if len(new_game_result) == 0:
             genre_result = get_genre_info(genre_id)
-            delete_row(genre_result)        
+            delete_row(genre_result)
+        flash("Changes to " + game_result.name + " has been made")
         return redirect(url_for('show_home'))
     else:
         if game_result.user_id != current_user_id:
@@ -294,9 +318,10 @@ def edit_game(genre_id, game_id):
 @app.route('/catalog/<int:genre_id>/games/<int:game_id>/delete/',
            methods=['GET', 'POST'])
 def delete_game(genre_id, game_id):
-    """Displays the  page and handle the POST request to delete delete operation.
-
-    
+    """Displays the  page and handle the POST request for delete operation.
+    Args:
+      genre_id: the id of the game's genre.
+      game_id: the id of the game to search for in DB.
     """
     if 'username' not in login_session:
         return redirect('/login')
@@ -304,20 +329,31 @@ def delete_game(genre_id, game_id):
     current_user_id = get_user_id(login_session['email'])
 
     if request.method == 'POST':
+        client_token = request.form['csrf_token']
+        if login_session['csrf_token'] != client_token:
+            response = make_response(json.dumps('Invalid state parameter'),
+                                     401)
+            response.headers['Content-Type'] = 'application/json'
+            return response
+
         delete_row(game_result)
         new_game_result = get_all_games_in_genre(genre_id)
         if len(new_game_result) == 0:
             genre_result = get_genre_info(genre_id)
             delete_row(genre_result)
+        flash(game_result.name + " was deleted from database")
         return redirect(url_for('show_home'))
     else:
         if game_result.user_id != current_user_id:
             return render_template('deadend.html')
         else:
+            state = make_csrf_token()
+            login_session['csrf_token'] = state
             return render_template('delete_game.html',
                                    genre_id=genre_id,
                                    game_id=game_id,
-                                   game_info=game_result)
+                                   game_info=game_result,
+                                   CSRF_TOKEN=state)
 
 
 @app.route('/catalog/JSON/')
@@ -355,6 +391,37 @@ def one_game_in_genre_JSON(genre_id, game_id):
     return jsonify(Game=game_result.serialize)
 
 
+@app.route('/catalog/recent_feed/')
+def new_game_feed():
+    """Displays a page for user to subscribe to the AtomFeed
+       of newly added games.
+    """
+    feed = AtomFeed("Recently Added Games",
+                    feed_url=request.url,
+                    url=request.host_url)
+    new_games = get_new_games()
+    for game in new_games:
+        user_name = get_user_info(game.user_id).name
+        game_url = make_game_ext_url(game.genre_id, game.id)
+
+        feed.add(game.name,
+                 url=game_url,
+                 updated=game.date_added,
+                 author=user_name)
+    return feed.get_response()
+
+
+def make_game_ext_url(genre_id, game_id):
+    """Helper function for AtomFeed
+
+    The function returns the url for the game detai page for the selected game.
+    Args:
+      genre_id: the id of the game's genre.
+      game_id: the id of the game to search for in DB.
+    """
+    return url_for('show_game', genre_id=genre_id, game_id=game_id)
+
+
 def get_all_genres():
     """Returns all game genres currently in the database."""
     return session.query(Genre).all()
@@ -383,29 +450,32 @@ def get_game_info(game_id):
             .filter_by(id=game_id).one())
 
 
-def create_game_info_dict(game_name, developer, publisher, genre_id,
-                          user_id, description, release_date, time_now):
+def create_game_info_dict(game_name, image_url, developer, publisher, genre_id,
+                          user_id, description, release_year, time_now):
     """Returns a dictionary containing relavent information of the game
     Args:
       game_name: title of the game.
+      image_url: URL for the game art.
       developer: the developer of the game.
       publisher: the publisher of the game.
       genre_id: the id of the game's genre.
       user_id: the id of the user that's creating this entry.
       description: a short decription of the game.
-      release_date: a Python Date object of when the game was released.
+      release_year: the year the game was released.
       time_now: a Python Datetime object used to indicate
                 when the DB entry was created.
     """
     game_info = {}
     game_info['name'] = game_name
+    game_info['image_url'] = image_url
     game_info['published_by'] = publisher
     game_info['developed_by'] = developer
     game_info['genre_id'] = genre_id
     game_info['user_id'] = user_id
     game_info['description'] = description
-    game_info['release_date'] = release_date
+    game_info['release_year'] = release_year
     game_info['date_added'] = time_now
+
     return game_info
 
 
@@ -416,14 +486,14 @@ def create_game(game_info):
                  which contains information to be added into the DB.
     """
     if game_info['name'] == "" or game_info['genre_id'] is None:
-        # send a flash message here
-        print "nononono"
+        flash("Both game name and game genre are required", "error")
         return None
     new_game = Game(name=game_info['name'],
                     description=game_info['description'],
                     developed_by=game_info['developed_by'],
                     published_by=game_info['published_by'],
-                    release_date=game_info['release_date'],
+                    release_year=game_info['release_year'],
+                    image_url=game_info['image_url'],
                     genre_id=game_info['genre_id'],
                     user_id=game_info['user_id'],
                     date_added=game_info['date_added'])
@@ -437,7 +507,8 @@ def create_game(game_info):
 def create_user(login_session):
     """Adds a user to the DB.
     Args:
-      login_session: a dictionary containing the user information to be added into the DB.
+      login_session: a dictionary containing the user information
+                     to be added into the DB.
     """
     new_user = User(name=login_session['username'],
                     email=login_session['email'],
@@ -454,8 +525,11 @@ def get_user_info(user_id):
     Args:
       user_id: the id of the user entry in the DB to search for
     """
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
+    try:
+        user = session.query(User).filter_by(id=user_id).one()
+        return user
+    except:
+        return None
 
 
 def get_user_id(email):
@@ -477,9 +551,10 @@ def create_genre(genre_name):
     """
     if genre_name == "":
         return None
-    new_genre = Genre(name=genre_name)
-    session.add(new_genre)
-    session.commit()
+    if not get_genre_id(genre_name):
+        new_genre = Genre(name=genre_name)
+        session.add(new_genre)
+        session.commit()
     genre = (session.query(Genre)
              .filter_by(name=genre_name).one())
     return genre.id
@@ -522,6 +597,22 @@ def update_row(row):
     """
     session.add(row)
     session.commit()
+
+
+def make_csrf_token():
+    """Helper function to make randomized CSRF token.
+    """
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
+    return state
+
+
+def get_new_games():
+    """Returns the last tex games which were added to the database."""
+    newly_added_games = (session.query(Game).order_by(desc(Game.date_added))
+                         .limit(10).all())
+    return newly_added_games
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
